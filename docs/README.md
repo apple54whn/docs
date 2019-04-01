@@ -1,8 +1,8 @@
 ---
 home: true
 heroImage: /index.jpg
-heroText: apple54whn
-tagline: apple54whn的博客
+heroText: Conanan
+tagline: Conanan的博客
 actionText: 快速上手 →
 actionLink: /zh/guide/
 features:

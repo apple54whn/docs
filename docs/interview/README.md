@@ -15,6 +15,18 @@
   实现运行时多态前提：**继承或实现**；**方法的重写**（不重写无意义）；**父类引用指向子类对象**（即向上转型）。
 
 * 抽象：将一类事物抽取我们所关注的属性和行为，形成新的事物的思维过程。
+::: tip
+This is a tip
+:::
+
+::: warning
+This is a warning
+:::
+
+::: danger STOP
+This is a dangerous warning
+:::
+
 
 
 
@@ -69,6 +81,8 @@ char型变量是用来存储Unicode编码的字符的，读取到JVM中时会将
 
 外部类的修饰符只能是 public 或默认；类的成员（包括内部类）的修饰符可以是以上四种
 
+一个Java文件中可以有多个类，但是public修饰的只能有一个，且类名和文件名一致！
+
 
 
 ## overload 和 overrid 的区别
@@ -103,20 +117,6 @@ char型变量是用来存储Unicode编码的字符的，读取到JVM中时会将
     若父类中有**私有方法、静态方法**，因为和**类相关**，子类也可以存在完全一样的方法，**不是重写**！
 
 
-
-## 如何实现线程间的通讯
-
-* synchronized+wait+notifyAll
-
-  * wait：等待并**释放锁**，线程被**阻塞**，被唤醒后若获得锁那么从这里执行后续代码
-
-  * notify/All：唤醒该锁上的所有线程，被通知线程不能立即恢复执行线程，**重新请求同步锁**。但是**notifyAll不会释放锁**
-
-    notify有可能会再次唤醒生产者/消费者，导致最终都在wait
-
-* ReentrantLock+Condition+await+signalAll
-
-  * 可以实现更细粒度的锁控制，且可以精确控制唤醒的线程
 
 ## 抽象类和接口的区别
 
@@ -253,7 +253,7 @@ public static int fin() {
   }
 ```
 
-![](images\形参实参问题.png)
+![](/images/interview/形参实参问题.png)
 
 ​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 
@@ -499,3 +499,204 @@ public class Son extends Father{
 
 
 
+## Java IO流有几种？抽象类有什么？
+
+- 字节流：InputStream、OutputStream
+
+- 字符流：Reader、Writer
+
+  转换流的InputStreamReader、OutputStreamWriter也是字符流，唯一可以指定字符集的流！
+
+
+
+##  什么是java 序列化，如何实现？
+
+* 把**Java对象保存为二进制字节码**的过程，可用于传输。反序列化相反。
+* 可以使用ObjectOutputStream的writeObject来实现；或让被传输的对象**实现 serializable 标记接口**，编译时就会特殊处理
+
+
+
+## 能不能自己写个类，也叫java.lang.String？
+
+可以，但是在使用的时候必须用自己的类加载器来加载，否则系统的类加载器只会加载jre.jar包中的String类。
+
+在 Tomcat 的 web 应用，都是由 webapp 自己的类加载器先自己加载 WEB-INF/classess 目录中的类，若在这里面写了String 类，Servlet程序加载的就是自己写的String 类。
+
+
+
+## Math.round(-11.5) = -11
+
+算法为Math.floor(x+0.5)：为向下取小，并取整
+
+
+
+## JVM 调优
+
+* 内存泄漏检查：系统资源（各方面的资源，堆、栈、线程等）在错误使用的情况下，导致使用完毕的资源无法回收（或没有回收），从而导致新的资源分配请求无法完成，引起系统错误。
+
+  根据垃圾回收前后情况对比，同时根据对象引用情况（常见的集合对象引用）分析，基本都可以找到泄漏点。
+
+* 堆栈溢出，StackOverflowError：递归没返回，或者循环调用造成
+
+* 线程堆栈满：一个线程的空间大小是有限制的（1M），增加线程栈大小。`-Xss2m`，查看代码是否有造成泄露部分
+
+* 系统内存被占满，OutOfMemoryError：unable to create new native thread，操作系统没有足够的资源来产生这个线程造成的
+
+  当系统内存固定时，分配给 Java 虚拟机的内存越多，那么，系统总共能够产生的线程也就越少，两者成反比的关系。修改`-Xss `来减少分配给单个线程的空间，也可以增加系统总共内生产的线程数。 
+
+  
+
+## JVM 如何加载类？如何分配空间？
+
+指将 class 文件的二进制数据读入到**运行时数据区**（JVM运行起来时就给内存划分的空间）中，并在方法区内创建一个 class 对象：
+
+* 栈
+
+  每一个线程运行起来的时候就会对应一个栈（线程栈），栈中存放的数据被当前线程所独享（不会产生资源共享情况，所以线程是安全的）。而栈当中存放的是栈帧，当线程调用方法时，就是形成一个栈帧，并将这个栈帧进行压栈操作。方法执行完后，进行出栈操作。这个栈帧里面包括（局部变量，操作数栈，指向当前方法对应类的常量池引用，方法返回地址等信息）。
+
+* 本地方法栈
+
+  本地方法栈的机制和栈的相似，区别在于，栈运行的是Java 实现的方法，而本地方法栈运行的是本地方法。本地方法指的是 JVM 需要调用非Java 语言所实现的方法。在 JVM 规范中，没有强化性要求实现方一定要划分出本地方法栈（例如：HotSpot 虚拟机将本地方法栈和栈合二为一）和具体实现（不同的操作系统，对 JVM规范的具体实现都不一样）。
+
+* 堆
+
+  堆内存主要存放创建的对象和数组。堆内存在 JVM 中是唯一的，能被多个线程所共享。堆里面的每一个对象都存放着实例的实例变量。堆内存的对象没有被引用，会自动被 Java垃圾回收机制回收。JVM 为每一个 class 对象都维护一个常量池。
+
+* 方法区
+
+  和堆一样，可以被多个线程多共享。主要存放每一个加载 class 的信息。class 信息主要包含魔数（确定是否是一个 class 文件），访问标志（当前的类是普通类还是接口，是否是抽象类，是否被 public 修饰，是否使用了 final修饰等描述信息......），字段表集合信息（使用什么访问修饰符，是实例变量还是静态变量，是否使用了 final 修饰等描述信息.....），方法表集合信息（使用什么访问修饰符，是否静态方法，是否使用了 final 修饰，是否使用了 synchronized 修饰，是否是native 方法......）等内容。当一个类加载器加载了一个类的时候，会根据这个 class 文件创建一个class 对象，class 对象就包含了上述的信息。后续要创建这个类的实例，都根据这个 class 对象创建出来的。在1.8以后使用了元空间（meta space）来实现方法区。
+
+* 程序计数器
+
+  程序计数器也可以称为 PC 寄存器（通俗讲就是指令缓存）。它主要用于缓存当前程序下一条指令的指令地址，CPU 根据这个地址找到将要执行的指令。这个寄存器是 JVM内部实现的，不是物理概念上的计数器，不过和 JVM 的实现逻辑一样。
+
+  
+
+## 面向对象七大设计原则
+
+- **开**：开闭原则。一个软件实体应当对扩展开发，对修改关闭
+- **口**：接口隔离原则。使用多个专门的接口比使用单一的总接口要好
+- **合**：组合/聚合复用原则。要尽量使用合成/聚合，尽量不要使用继承
+- **里**：里式替换原则。所有引用基类的地方必须透明的使用其子类的对象
+- **最**：最少知识原则（迪米特法则）。一个对象应当对其他对象有尽可能少的了解
+- **单**：单一职责原则。把多于的职责分离出去，分别再创建一些类来完成每一个职责
+- **依**：依赖倒置原则。实现类依赖接口或抽象类，减少类间的耦合性，提高系统的稳定
+
+
+
+## 设计模式
+
+* 创建型模式，共五种：抽象工厂模式、**工厂方法模式**、**单例模式**、建造者模式、原型模式。
+* 结构型模式，共七种：适配器模式、**装饰器模式**、代理模式、外观模式、桥接模式、组合模式、享元模式。
+* 行为型模式，共十一种：策略模式、模板方法模式、观察者模式、迭代子模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式。
+
+
+
+## 工厂方法模式
+
+定义一个**创建对象的接口**，让其**子类自己决定实例化哪一个工厂类**，工厂模式使其创建过程延迟到子类进行
+
+如果有新的对象增加，只需要增加一个**具体的类**和**具体的工厂类**即可
+
+```java
+public abstract class Animal {
+	public abstract void eat();
+}
+public class Dog extends Animal {
+	@Override
+	public void eat() {
+		System.out.println("狗吃肉");
+	}
+}
+```
+
+```java
+public interface Factory {
+	public abstract Animal creatAnimal();
+}
+public class DogFactory implements Factory {
+	@Override
+	public Animal creatAnimal() {
+		return new Dog();
+	}
+}
+```
+
+```java
+public static void main(String[] args) {
+	Factory f = new DogFactory();
+	Animal a = f.creatAnimal();
+	a.eat();
+}
+```
+
+
+
+## 单例模式
+
+饿汉式
+
+```java
+public class Singleton {   
+    private Singleton() {}  
+    
+    private static final Singleto1 single = new Singleton(); 
+    
+    public static Singleton getInstance() {
+        return single;
+    }
+}
+```
+
+懒汉式
+
+```java
+public class Singleton {   
+    private Singleton() {}  
+    
+    private static final Singleton single = null; 
+    
+    public /*synchronized*/ static Singleton getInstance() {
+        if(single == null){
+            single = new Singleton();
+        }
+        return single;
+    }
+}
+```
+
+线程安全的，内部类
+
+```java
+public class Singleton {
+    private Singleton() {
+    }
+
+    private static class Inner {
+        private static Singleton s = new Singleton();
+    }
+
+    public static Singleton getInstance() {
+        return Inner.s;
+    }
+}
+```
+
+
+
+## 装饰者模式
+
+**动态地给一个对象添加一些额外的职责**，同时又不改变其结构。就增加功能来说，装饰者模式相**比生成子类更为灵活**。
+
+如IO流`BufferedReader br = new BufferedReader(new InputStreamReader(System.in))`
+
+
+
+
+
+
+
+<br/>
+<br/>
+<br/>
+<Valine></Valine>
