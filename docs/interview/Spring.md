@@ -202,6 +202,15 @@ System.out.println(invoke);//方法的返回值
 
 
 
+## AOP
+
+- **@EnableAspectJAutoProxy**：开启注解AOP
+- **@Aspect**：切面类
+  - **@Pointcut**：切点，execution表达式
+  - **Advice**：通知
+    - @Before / AfterReturning / AfterThrowing / After：前置，后置，异常，最终通知
+    - @Around：环绕通知，通过ProceedingJoinPoint对象调用proceed方法
+
 ## Spring Bean 的作用域/生命周期
 
 `@Scope`：用于指定bean的作用范围。也可以放置注解在定义的4个组件上
@@ -217,6 +226,10 @@ System.out.println(invoke);//方法的返回值
 
 
 ## SpringMVC 的流程
+
+> ClassPathXmlApplicationContext、AnnotationConfigApplicationContext
+
+SpringMVC是一个 Java实现MVC模型的轻量级WEB框架。底部封装了ServletAPI。
 
 > 启动Tomcat，根据load-on-startup来决定何时创建DispatcherServlet：默认-1则访问时创建；非负整数则按顺序创建（>=1）
 
@@ -236,14 +249,10 @@ System.out.println(invoke);//方法的返回值
 
 
 
-## AOP
-
-* **@EnableAspectJAutoProxy**：开启注解AOP
-* **@Aspect**：切面类
-  * **@Pointcut**：切点，execution表达式
-  * **Advice**：通知
-    * @Before / AfterReturning / AfterThrowing / After：前置，后置，异常，最终通知
-    * @Around：环绕通知，通过ProceedingJoinPoint对象调用proceed方法
 
 
+## 为什么使用Spring Boot
 
+* Spring Boot是为了解决依赖管理麻烦、配置繁重等问题。其中最核心的两个功能为：
+  * 起步依赖：本质利用Maven的依赖传递功能，非常简单即可引入需要的jar包
+  * 自动配置：Spring Boot采用约定大于配置的理念，启动类上有@SpringBootApplication注解，通过@EnableAutoConfiguration来加载spring.factories中记录的类xxAutoConfiguration类，完成自动配置。

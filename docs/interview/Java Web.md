@@ -43,10 +43,13 @@
 
 ## Cookie 和 Session 区别
 
-* 相同：都是用来**跟踪浏览器用户身份**的**会话技术**
+* 相同：都是用来**跟踪浏览器用户状态**的**会话技术**
 * 区别：
   * Cookie存储在客户端，存储数据量有限，不安全
-  * Session存储在服务端，存储数据量大，安全。Session是基于Cookie进行信息处理的
+
+  * Session存储在服务端，存储数据量大，安全。但是过多的Session会占用服务器内存，影响性能。
+
+    Session是基于Cookie进行信息处理的
 
 
 
@@ -66,9 +69,60 @@ Asynchronous JavaScript and XML，优点：
 
 ## Servlet 的生命周期
 
-* `void init(ServletConfig)`：**创建Servlet对象==后==**立即执行初始化方法；一个Servlet在内存中只存在一个对象(==单例==)
+* `void init(ServletConfig)`：**创建Servlet对象后**立即执行init方法；一个Servlet在内存中只存在一个对象(==单例==)
 
   > **默认**情况下，**第一次被访问时**，Servlet被创建。修改创建时机`<load-on-startup>`的值为负数，越小优先级越高
 
-* `void service(ServletRequest request, ServletResponse response)`：**每次处理请求**时都会被调用；
-* `void destroy()`：服务器**正常关闭**，**销毁Servlet对象==前==**执行释放资源的方法（只1次）；
+* `void service(ServletRequest request, ServletResponse response)`：**每次处理请求**时都会被调用service方法；
+
+* `void destroy()`：服务器**正常关闭**，**销毁Servlet对象前**执行释放资源的方法（只1次）；
+
+
+
+## forward 与 redirect 的区别
+
+* **转发 是服务器行为，一次请求**，在地址栏会显示同一URL，而 **重定向 是客户端行为，两次请求**，会显示不同的URL（302，location）
+* 转发 可以用于**共享Request数据**，而 重定向 不能共享Request数据
+* 转发只能用于**同一web应用中组件**，重定向可以用于**任意URL**
+
+
+
+## request.getAttribute()/getParameter() 
+
+* getParameter/Map 是**获取表单GET、POST提交的参数**，返回字符串、Map
+* getAttribute和setAttribute是用来在**Request域中存取数据的**，返回对象
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## OSI 七层模型
+
+* 物理层：bit流
+* 数据链路层：数据帧Frame
+* 网络层：数据包package
+* 传输层：数据段segment
+* 会话层：
+* 表示层
+* 应用层
+
+
+
+## TCP/IP 模型
+
+* 链路层：网络连接设备的驱动协议
+* 网络层：将传输的**数据进行分组**，将分组数据**发送到目标**计算机或者网络
+* 传输层：网络通信，TCP、UDP协议等
+* 应用层：HTTP协议等

@@ -59,5 +59,10 @@ typings/
 
 # next.js build output
 .next
+
 test.css
-config
+
+config/
+
+docs/.vuepress/dist/
+

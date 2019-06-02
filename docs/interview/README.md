@@ -8,13 +8,13 @@
 
   但是继承是强耦合且破坏了封装性。
 
-* **多态**：**一个对象有多种形态**，就是用同一对象调用同一方法但是做了不同的事。
+* **多态**：**父类引用指向子类对象，通过该引用调用时存在编译期不确定性，运行期确定。**
 
   > 方法重载（@overload）实现编译时多态性；方法重写（@override）实现运行时多态性。
 
   实现运行时多态前提：**继承或实现**；**方法的重写**（不重写无意义）；**父类引用指向子类对象**（即向上转型）。
 
-* 抽象：将一类事物抽取我们所关注的属性和行为，形成新的事物的思维过程。
+* 抽象：将一类事物抽取我们所关注的**属性和行为**，形成新的事物的思维过程。
 ::: tip
 This is a tip
 :::
@@ -34,6 +34,7 @@ This is a dangerous warning
 
 - JRE(Java Runtime Environment)：是Java程序的运行时环境，包含 **JVM** 和运行时所需要的**核心类库** 。
 - JDK (Java Development Kit)：是Java程序开发工具包，包含 **JRE** 和**开发人员使用的工具**。
+- 通过不同操作系统上的JVM来**屏蔽不同操作系统间指令集的不同**。
 
 
 
@@ -51,28 +52,84 @@ char型变量是用来存储Unicode编码的字符的，读取到JVM中时会将
 
 
 
-## Integer 与int 的区别
+## boolean 占几个字节？
 
-* int为基本数据类型，在堆中默认值为0；
-* Integer为int类型的包装类型，在堆中默认值为null；可以区分出未赋值与0的区别；
-
-## 静态变量和实例变量的区别
-
-* **语法**：静态变量加**static**；实例变量不用加
-* 运行时：
-  * 静态变量属于类，只要程序加载了类的字节码，就能使用
-  * 实例变量属于对象的属性，必须创建了对象，才能使用
+在《Java虚拟机规范》给出了4个字节（编译后用int替代），和boolean数组1个字节的定义（当byte数组处理）
 
 
+
+## 基本类型和包装类型
+
+* 基本类型存储在栈中，初始值如int为0，boolean为false
+* 包装类型存储在堆中，初始值为null（可以区分未赋值与0区别）
+
+## 装箱与拆箱
+
+- 装箱：将基本数据类型的值转为引用数据类型。方法有如`Integer.valueOf(int num/String str)`
+- 拆箱：将引用数据类型的值转为基本数据类型。方法有如`.intValue()`
+
+**基本类型的包装类（除浮点数）都有其缓存，Boolean为`true、false`，Character为`0~127`，其他为`-128~127`**
+
+> 包装类都重写Object类中的`toString()` 方法，以**字符串**形式返回包装类的基本数据类型的值
+>
+> 除了Character外，包装类都有`valueOf(String s)`方法，根据String类型参数创建包装类对象
+>
+> 除了Character外，包装类都有`parseXXX(String s)`的静态方法，将字符串转为基本类型数据
+
+
+
+## 数字类型循环问题
+
+```java
+public static final int A = Integer.MAX_VALUE;
+public static final int B = A-1;
+
+public static void main(String[] args) {
+    int count = 0;
+    for (int i = B;i<=A;i++){
+        count++;
+    }
+    System.out.println(count);
+}
+```
+
+若是i<A，则循环一次即可，输出1；
+
+若是i<=A，就不是2次那么简单了。第二次i与A相等，执行count++后继续执行i++，此时i超出Integer最大值，变为Integer的最小值-2147483648，继续循环下去了。。。
+
+## 取余取模
+
+C、C++、java、JavaScript中%是取余，Python中%是取模，只对于整数有意义
+
+==区别在于第一步的商**趋于0(取余)**、**趋于负无穷(取模)**，**取余和取模同符号数结果相同**==
+
+```java
+取余(结果符号取决于被除数)				取模(结果符号取决于模数)
+5%3=2；					 			5%3=2；
+-5%-3=-2;							 -5%-3=-2；
+5%-3=2;								 5%-3=-1；
+-5%3=-2;							 -5%3=1；
+```
+
+
+
+## 成员变量和局部变量的区别
+
+* 成员变量属于**类或实例**（可以被访问权限修饰符、static、final等修饰）；局部变量属于**方法**（最多只能被final修饰）
+* 成员变量在**堆**内存中；局部变量在**栈**内存中
+* 成员变量**有默认初始值**；局部变量没有默认初始值；
 
 ## == & equals
 
 - `==`：都是比较变量在内存（栈）中的值。**基本类型**：比较值是否相等；**引用类型**：比较地址值是否相等
-- `equals()`：只能比较**引用类型**，底层调用`==`，比较地址值是否相等。一般根据需要重写，`String`重写了
+
+- `equals()`：只能比较**引用类型**，底层调用`==`，比较地址值是否相等。一般根据需要重写，`String`重写了。
+
+  一般推荐使用`Objects.equals(String a, String b)`来代替。其底层`(a == b) || (a != null && a.equals(b))`
 
 
 
-## 作用域 private，，protected，public以及不写时的区别
+## 作用域 private，protected，public以及不写时的区别
 
 * private：类访问权限
 * 不写：包访问权限
@@ -151,14 +208,23 @@ char型变量是用来存储Unicode编码的字符的，读取到JVM中时会将
 
 ## String、StringBuffer、StringBuilder
 
-- `String`对象**不可变**（引用可变），线程**安全**。**重写了`equals`和`hashCode`方法**
-  - `String`**类**及其所有**属性如`char[]`（Java 9为`byte[]`）都被声明为`final`**，其**值在创建后不能被更改**
-  - 由于它的不可变性，类似拼接，裁剪等操作，都**可能产生新的String对象**（取决于常量池中是否存在），对性能有影响。
-  - ==**只有**通过引号**直接赋值**的方式定义的会放入字符串常量池中==；但是`new String`方式定义的**不会放入字符串常量池**
-  - 字符串若是==**变量相加，先开空间再拼接**==；若是==**常量先加，然后在常量池中找**==，==有就返回，没有就创建==。
-- **StringBuffer是同步的，数据安全，效率低；StringBuilder是不同步的，数据不安全，效率高**；都是可变的
-  * 底层是维护了`char[]`（Java 9为`byte[]`），内部数组初始值为16。扩容利用了`System.arrayCopy()`方法
-  * 但是这俩都**没有重写`equals`和`hashCode`方法**。作为元素放入Hash类集合中时会出现问题
+- `String`对象**不可变**（引用可变），线程**安全**。
+
+  > - `String`**类**及其所有**属性如`char[]`（Java 9为`byte[]`）都被声明为`final`**，其**值在创建后不能被更改**
+  >
+  > - 由于它的不可变性，类似拼接裁剪等操作，都**可能产生新的String对象**（取决于常量池中是否存在）对性能有影响。
+  >
+  >   ==**只有**通过引号**直接赋值**的方式定义的会放入字符串常量池中==；但是`new String`方式定义的**不会放入字符串常量池**
+  >
+  >   字符串若是==**变量相加，先开空间再拼接**==；若是==**常量先加，然后在常量池中找**==，==有就返回，没有就创建==。
+  >
+  > - **重写了`equals`和`hashCode`方法**
+
+- **StringBuffer是同步的，数据安全，效率低；StringBuilder是不同步的，数据不安全，效率高**；都是可变的。
+
+  > - 底层是维护了`char[]`（Java 9为`byte[]`），内部数组初始值为16。扩容利用了`Arrays.copyOf`底层是`System.arraycopy()`方法
+  > - 但是这俩都**没有重写`equals`和`hashCode`方法**。作为元素放入Hash类集合中时会出现问题
+  > - `StringBuilder`与`StringBuffer`有公共父类`AbstractStringBuilder`。
 
 
 
@@ -181,26 +247,15 @@ char型变量是用来存储Unicode编码的字符的，读取到JVM中时会将
 
 
 
+## StringBuilder 和 + 
+
+在JDK1.5之后，+ 的内部采用StringBuilder 实现，但是若在循环中使用+来拼接字符串，会创建多个StringBuilder 对象，GC回收不及时会占用大量资源。所以字符串拼接时（特别在循环中）最好使用StringBuilder。
+
+
+
 ## 数组有length属性，String有length()
 
 
-
-## try...finally return 问题
-
-```java
-public static int fin() {
-    int a = 10;
-    try {
-        return a;
-    } finally {
-        a = 40;
-        return a; //最终返回40。这里若修改为return 4，最终就返回4
-        // 若没有return a;这行代码，则无论a怎么变化，还是会返回10；
-    }
-}
-```
-
-【注意】如果**finally有return语句**，将**覆盖**原始的返回值，永远返回finally中的值。一般应避免该情况
 
 ## final 关键字
 
@@ -225,8 +280,22 @@ public static int fin() {
 
 ## 参数传递问题
 
-- 基本数据类型：形式参数的改变不影响实际参数
-- 引用数据类型：形式参数的改变影响实际参数
+- 基本数据类型：形式参数的改变不影响实际参数（基本类型的包装类也符合这条规则）
+- 引用数据类型：形式参数中**属性的改变影响**实际参数（若不是属性改变，则并不影响）
+
+```java
+public static void main(String[] args) {
+    Integer i = 0;//127也是一样
+    change(i);
+    System.out.println(i);//第二行中i是多少这里就是多少
+}
+
+private static void change(Integer i) {
+    if (i < 1) {
+        i+=1;
+    }
+}
+```
 
 【下题重点】在于**String内容不可变**并且变量相加需要开空间再拼接，StringBuilder等内容可以变
 
@@ -253,7 +322,7 @@ public static int fin() {
   }
 ```
 
-![](/images/interview/形参实参问题.png)
+![](./images/666.png)
 
 ​                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
 
@@ -287,19 +356,6 @@ public static int fin() {
 
 
 
-## 装箱与拆箱
-
-* 装箱：将基本数据类型的值转为引用数据类型。方法有如`Integer.valueOf(int num/String str)`
-* 拆箱：将引用数据类型的值转为基本数据类型。方法有如`.intValue()`
-
-**基本类型包装类（除浮点数）都有其缓存，Boolean为`true、false`，Character为`0~127`，其他为`-128~127`**
-
-> 包装类都重写Object类中的`toString()` 方法，以**字符串**形式返回包装类的基本数据类型的值
->
-> 除了Character外，包装类都有`valueOf(String s)`方法，根据String类型参数创建包装类对象
->
-> 除了Character外，包装类都有`parseXXX(String s)`的静态方法，将字符串转为基本类型数据
-
 ## 取余取模
 
 （C、C++、java、JavaScript中%是取余，Python中%是取模），只对于整数有意义
@@ -316,10 +372,6 @@ public static int fin() {
 
 
 
-* 
-
-
-
 ## ++i & i++
 
 实际上，不管是前置 ++，还是后置 ++，都是先将变量的值加 1，然后才继续计算的。二者之间真正的区别是：
@@ -330,6 +382,39 @@ public static int fin() {
 都不是原子操作！！！
 
 
+
+## for 循环问题
+
+```java
+int j = 0;
+for (int i = 0; i < 100; i++) {
+    j = j++; //0
+    //j+=1; //100
+    //j++; //100
+}
+System.out.println(j);
+```
+
+
+
+
+
+
+
+## BigDecimal使用&值扩大为整数
+
+- 尽量使用参数类型为**String**的构造函数。
+- BigDecimal都是不可变的（immutable）的，在进行每一步运算时，都会产生一个新的对象，所以在做加减乘除运算时千万要**保存操作后的值**。
+
+```java
+BigDecimal a = new BigDecimal(Double.toString(200000.8));
+BigDecimal b = new BigDecimal(Double.toString(170000.7));
+
+BigDecimal c = a.subtract(b);//减法
+System.out.println(c);
+```
+
+或将**值扩大为整数后再做加减**。
 
 ## 交换变量的三种方式
 
@@ -355,7 +440,8 @@ public static int fin() {
    a = a ^ b;
    ```
 
-   
+
+
 
 ## Object类的常见方法
 
@@ -393,6 +479,15 @@ public static int fin() {
 11. `wait() throws InterruptedException`跟之前的2个wait方法一样，只不过该方法一直等待，没有超时时间这个概念
 
     ​																																	
+
+
+
+## 浅克隆与深克隆
+
+* 浅克隆：对于被克隆对象中的**引用类型**，**只复制其地址值**。实现Cloneable 接口，重写clone方法，修改访问修饰符为public
+* 深克隆：**复制被克隆对象的所有类型成员变量**。实现Serializable接口，通过对象的序列化和反序列化实现克隆
+
+
 
 ## 一个对象的实例化过程
 
@@ -473,10 +568,21 @@ public class Son extends Father{
 ## 异常分类
 
 * Java中所有异常的根类是`java.lang.Throwable`，其下有两个子类：
-  * `java.lang.Error`：**程序无法处理的错误**，表示运行应用程序中较严重问题，如`OutOfMemoryError`
-  * `java.lang.Exception`：程序可以处理的错误，根据在编译时期还是运行时期去检查异常分为如下两类：
-    * `RuntimeException`：**运行时异常**，如`NullPointerException`，`ArrayIndexOutOfBoundsException`，`ArithmeticException`
-    * 除过运行时异常外的都是**编译时异常**，如`IOException`，`ClassNotFoundException`
+  * `java.lang.Error`：**程序无法处理的错误**，表示运行应用程序中较严重问题。
+
+    如`OutOfMemoryError`、`StackOverflowError`（递归）
+
+  * `java.lang.Exception`：**程序可以处理的错误**，根据在编译时期还是运行时期去检查异常分为如下两类：
+
+    * `RuntimeException`：**运行时异常**
+
+      如`NullPointerException`，`ArrayIndexOutOfBoundsException`，`ArithmeticException`，
+
+      `ClassCastException`，`IllegalArgumentException`，`IllegalStateException`
+
+    * 除过运行时异常外的都是**编译时异常**
+
+      如`IOException`，`SQLException`，`ClassNotFoundException`
 
 ## throw 和 throws 区别
 
@@ -489,6 +595,23 @@ public class Son extends Father{
   - `throws`：在**方法声明上**，这个异常不一定会产生，是一种**可能性**
 
   
+
+## try...finally return 问题
+
+```java
+public static int fin() {
+    int a = 10;
+    try {
+        return a;
+    } finally {
+        a = 40;
+        return a; //最终返回40。这里若修改为return 4，最终就返回4
+        // 若没有return a;这行代码，则无论a怎么变化，还是会返回10；
+    }
+}
+```
+
+【注意】如果**finally有return语句**，将**覆盖**原始的返回值，永远返回finally中的值。一般应避免该情况
 
 ## final finally finallize 区别
 
@@ -513,6 +636,7 @@ public class Son extends Father{
 
 * 把**Java对象保存为二进制字节码**的过程，可用于传输。反序列化相反。
 * 可以使用ObjectOutputStream的writeObject来实现；或让被传输的对象**实现 serializable 标记接口**，编译时就会特殊处理
+* 若类中有不想被序列化的字段，使用`transient`关键字修饰即可
 
 
 
@@ -526,58 +650,71 @@ public class Son extends Father{
 
 ## Math.round(-11.5) = -11
 
-算法为Math.floor(x+0.5)：为向下取小，并取整
+算法为Math.floor(x+0.5)：为向下取**小**，并取整
+
+
+
+## 4&10>>1=4
+
+值为4，>>优先级高
+
+
+
+## JVM 如何加载类？
+
+程序在运行期JVM通过**加载、连接、初始化**来加载类：
+
+* **加载**：JVM**获取类的二进制字节流，将其数据放入方法区，并生成Class对象放入堆中**。
+
+  * Bootstrap ClassLoader（引导类加载器）：由C实现，在Java中没有对象，为null。负责加载存放在 `JDK\jre\lib`的类
+
+  * ExtensionClassLoader（扩展类加载器）：负责加载 `JDK\jre\lib\ext`目录中的类
+
+  * Application ClassLoader（应用类加载器）：负责加载用户类路径（ClassPath）所指定的类
+
+    **双亲委派模型**：若一个类加载器收到了类加载的请求，它首先把请求委托给父加载器去完成，父类完成不了再传给子类
+
+* **连接**：
+
+  * **验证**：确保被加载类符合虚拟机要求
+  * **准备**：为类的静态变量分配内存，隐式初始化。
+  * **解析**（也可能在初始化后开始，为了支持Java运行时绑定）：把类中符号引用替换为直接引用
+
+* **初始化**：对类初始化
+
+* 使用：
+
+* 卸载：
+
+
+
+## JVM 内存结构？
+
+* **方法区**（线程共享区域，Java8使用元空间（meta space）来实现）：存储已被JVM加载的**Class数据信息**
+* **堆**（线程共享区域）：**存放对象实例**（不绝对），分为新生代、老年代等，为了方便GC。
+* **栈**（线程私有）：**每个方法执行时创建栈帧，存储局部变量**等信息
+* **本地方法栈**（线程私有）：操作系统相关方法
+* **PC计数器**（线程私有）：指向当前线程执行的**字节码指令地址**
 
 
 
 ## JVM 调优
 
-* 内存泄漏检查：系统资源（各方面的资源，堆、栈、线程等）在错误使用的情况下，导致使用完毕的资源无法回收（或没有回收），从而导致新的资源分配请求无法完成，引起系统错误。
+- `OutOfMemoryError`系统内存被占满，：unable to create new native thread，操作系统没有足够的资源来产生这个线程造成的。当系统内存固定时，分配给 Java 虚拟机的内存越多，那么，系统总共能够产生的线程也就越少，两者成反比的关系。修改`-Xss `来减少分配给单个线程的空间，也可以增加系统总共内生产的线程数。 
+- `StackOverflowError`堆栈溢出，：递归没返回，或者循环调用造成
+- 内存泄漏检查：系统资源（各方面的资源，堆、栈、线程等）在错误使用的情况下，导致使用完毕的资源无法回收（或没有回收），从而导致新的资源分配请求无法完成，引起系统错误。根据垃圾回收前后情况对比，同时根据对象引用情况（常见的集合对象引用）分析，基本都可以找到泄漏点。
+- 线程堆栈满：一个线程的空间大小是有限制的（1M），增加线程栈大小。`-Xss2m`，查看代码是否有造成泄露部分
 
-  根据垃圾回收前后情况对比，同时根据对象引用情况（常见的集合对象引用）分析，基本都可以找到泄漏点。
+## JVM 垃圾处理
 
-* 堆栈溢出，StackOverflowError：递归没返回，或者循环调用造成
 
-* 线程堆栈满：一个线程的空间大小是有限制的（1M），增加线程栈大小。`-Xss2m`，查看代码是否有造成泄露部分
-
-* 系统内存被占满，OutOfMemoryError：unable to create new native thread，操作系统没有足够的资源来产生这个线程造成的
-
-  当系统内存固定时，分配给 Java 虚拟机的内存越多，那么，系统总共能够产生的线程也就越少，两者成反比的关系。修改`-Xss `来减少分配给单个线程的空间，也可以增加系统总共内生产的线程数。 
-
-  
-
-## JVM 如何加载类？如何分配空间？
-
-指将 class 文件的二进制数据读入到**运行时数据区**（JVM运行起来时就给内存划分的空间）中，并在方法区内创建一个 class 对象：
-
-* 栈
-
-  每一个线程运行起来的时候就会对应一个栈（线程栈），栈中存放的数据被当前线程所独享（不会产生资源共享情况，所以线程是安全的）。而栈当中存放的是栈帧，当线程调用方法时，就是形成一个栈帧，并将这个栈帧进行压栈操作。方法执行完后，进行出栈操作。这个栈帧里面包括（局部变量，操作数栈，指向当前方法对应类的常量池引用，方法返回地址等信息）。
-
-* 本地方法栈
-
-  本地方法栈的机制和栈的相似，区别在于，栈运行的是Java 实现的方法，而本地方法栈运行的是本地方法。本地方法指的是 JVM 需要调用非Java 语言所实现的方法。在 JVM 规范中，没有强化性要求实现方一定要划分出本地方法栈（例如：HotSpot 虚拟机将本地方法栈和栈合二为一）和具体实现（不同的操作系统，对 JVM规范的具体实现都不一样）。
-
-* 堆
-
-  堆内存主要存放创建的对象和数组。堆内存在 JVM 中是唯一的，能被多个线程所共享。堆里面的每一个对象都存放着实例的实例变量。堆内存的对象没有被引用，会自动被 Java垃圾回收机制回收。JVM 为每一个 class 对象都维护一个常量池。
-
-* 方法区
-
-  和堆一样，可以被多个线程多共享。主要存放每一个加载 class 的信息。class 信息主要包含魔数（确定是否是一个 class 文件），访问标志（当前的类是普通类还是接口，是否是抽象类，是否被 public 修饰，是否使用了 final修饰等描述信息......），字段表集合信息（使用什么访问修饰符，是实例变量还是静态变量，是否使用了 final 修饰等描述信息.....），方法表集合信息（使用什么访问修饰符，是否静态方法，是否使用了 final 修饰，是否使用了 synchronized 修饰，是否是native 方法......）等内容。当一个类加载器加载了一个类的时候，会根据这个 class 文件创建一个class 对象，class 对象就包含了上述的信息。后续要创建这个类的实例，都根据这个 class 对象创建出来的。在1.8以后使用了元空间（meta space）来实现方法区。
-
-* 程序计数器
-
-  程序计数器也可以称为 PC 寄存器（通俗讲就是指令缓存）。它主要用于缓存当前程序下一条指令的指令地址，CPU 根据这个地址找到将要执行的指令。这个寄存器是 JVM内部实现的，不是物理概念上的计数器，不过和 JVM 的实现逻辑一样。
-
-  
 
 ## 面向对象七大设计原则
 
 - **开**：开闭原则。一个软件实体应当对扩展开发，对修改关闭
 - **口**：接口隔离原则。使用多个专门的接口比使用单一的总接口要好
 - **合**：组合/聚合复用原则。要尽量使用合成/聚合，尽量不要使用继承
-- **里**：里式替换原则。所有引用基类的地方必须透明的使用其子类的对象
+- **里**：里式替换原则。所有引用基类的地方必须可以使用其子类的对象替代
 - **最**：最少知识原则（迪米特法则）。一个对象应当对其他对象有尽可能少的了解
 - **单**：单一职责原则。把多于的职责分离出去，分别再创建一些类来完成每一个职责
 - **依**：依赖倒置原则。实现类依赖接口或抽象类，减少类间的耦合性，提高系统的稳定
@@ -587,7 +724,7 @@ public class Son extends Father{
 ## 设计模式
 
 * 创建型模式，共五种：抽象工厂模式、**工厂方法模式**、**单例模式**、建造者模式、原型模式。
-* 结构型模式，共七种：适配器模式、**装饰器模式**、代理模式、外观模式、桥接模式、组合模式、享元模式。
+* 结构型模式，共七种：**适配器模式**、**装饰器模式**、**代理模式**、外观模式、桥接模式、组合模式、享元模式。
 * 行为型模式，共十一种：策略模式、模板方法模式、观察者模式、迭代子模式、责任链模式、命令模式、备忘录模式、状态模式、访问者模式、中介者模式、解释器模式。
 
 
@@ -689,6 +826,66 @@ public class Singleton {
 **动态地给一个对象添加一些额外的职责**，同时又不改变其结构。就增加功能来说，装饰者模式相**比生成子类更为灵活**。
 
 如IO流`BufferedReader br = new BufferedReader(new InputStreamReader(System.in))`
+
+
+
+
+
+## 日期时间处理
+
+* 获取当前年月日时分秒
+
+  ```java
+  LocalDateTime dt = LocalDateTime.now();
+  System.out.println(dt.getYear());
+  System.out.println(dt.getMonthValue()); // 1 - 12，比Calendar强太多了
+  System.out.println(dt.getDayOfMonth());
+  System.out.println(dt.getHour());
+  System.out.println(dt.getMinute());
+  System.out.println(dt.getSecond());
+  ```
+
+* 从1970 年1 月1 日0 时0 分0 秒到现在的毫秒数
+
+  ```java
+  System.out.println(System.currentTimeMillis());
+  System.out.println(Clock.systemDefaultZone().millis());
+  System.out.println(new Date().getTime());
+  ```
+
+* 取得某月的最开始/后一天
+
+  ```java
+  LocalDate now = LocalDate.now();
+  
+  LocalDate fisrtDay = now.with(TemporalAdjusters.firstDayOfMonth());
+  LocalDate lastDay = now.with(TemporalAdjusters.lastDayOfMonth());
+  ```
+
+* 格式化日期（比8之前需要Formatter类来调用方法强多了）
+
+  ```java
+  DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  LocalDateTime localDateTime = LocalDateTime.now();//2019-04-03T10:32:12.172
+  String format = localDateTime.format(formatter);//2019-04-03 10:32:12
+  ```
+
+* 昨天/明天的当前时刻（日期、时分秒等同理）
+
+  ```java
+  LocalDateTime now = LocalDateTime.now();
+  LocalDateTime yesterday = now.minusDays(1);//2019-04-02T10:36:45.197
+  ```
+
+* 生日
+
+  ```java
+  MonthDay birthday = MonthDay.of(4, 3);
+  MonthDay now = MonthDay.from(LocalDateTime.now()); //LocalDate也可以
+  System.out.println(now.equals(birthday));
+  ```
+
+  
 
 
 
