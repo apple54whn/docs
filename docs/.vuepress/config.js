@@ -5,7 +5,7 @@ const sidebarConf = require('../../config/sidebarConf.js');
 module.exports = {
     // base: '/blog/',
     title: 'Conanan',
-    description: 'apple54whn的博客,conanan的博客',
+    description: 'apple54whn的文档,conanan的文档',
     locales: {
         // 键名是该语言所属的子路径
         // 作为特例，默认语言可以使用 '/' 作为其路径。
@@ -28,7 +28,7 @@ module.exports = {
         lastUpdated: '上次更新时间', // string | boolean
 
         // 假定是 GitHub. 同时也可以是一个完整的 GitLab URL
-        repo: 'apple54whn/blog',
+        repo: 'apple54whn/docs',
         // 假如文档不是放在仓库的根目录下：
         docsDir: 'docs',
         // 默认是 false, 设置为 true 来启用

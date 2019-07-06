@@ -10,7 +10,7 @@ npm run docs:build
 cd docs/.vuepress/dist
 
 # 如果是发布到自定义域名
-echo 'conanan.top' > CNAME
+echo 'docs.conanan.top' > CNAME
 
 git init
 git add -A
@@ -20,6 +20,6 @@ git commit -m 'deploy'
 # git push -f git@github.com:apple54whn/apple54whn.github.io.git master
 
 # 如果发布到 https://<USERNAME>.github.io/<REPO>
-git push -f git@github.com:apple54whn/blog.git master:gh-pages
+git push -f git@github.com:apple54whn/docs.git master:gh-pages
 
 cd -
